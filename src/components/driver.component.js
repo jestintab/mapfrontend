@@ -51,14 +51,15 @@ const TripsList = (props) => (
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+         { console.log(props.trip.drivepaths[0])
+}
           <div className="modal-body">
             <LoadScript googleMapsApiKey="AIzaSyBwxyQTz_O_Glz94XLRLbKaTXAWSA2bDeg">
               <GoogleMap
                 mapContainerStyle={containerStyle}
-                center={props.trip.drivepaths[0]}
-                zoom={10}
-              >
-                <Polygon paths={props.trip.drivepaths}></Polygon>
+                center={{lat: props.trip.drivepaths[0].latitude, lng: props.trip.drivepaths[0].longitude}}
+                zoom={10}>
+                <Polygon paths={props.trip.drivepaths.map( path => { return {lat: parseFloat(path.latitude) , lng: parseFloat(path.longitude)}})}></Polygon>
               </GoogleMap>
             </LoadScript>
           </div>
@@ -98,7 +99,7 @@ export default class Driver extends Component {
   onDriverChange(key) {
     const selectedDriver = this.state.drivers.filter((driver) => {
       if (driver._id === key) return driver;
-    });
+    }); 
     //console.log(selectedDriver[0].trips);
     this.setState({
       trips: selectedDriver[0].trips,
