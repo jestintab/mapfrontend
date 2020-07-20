@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import PubNubReact from 'pubnub-react';
+import io from 'socket.io-client';
 
 export default class MapComponent extends Component {
   constructor(props) {
@@ -15,14 +15,12 @@ export default class MapComponent extends Component {
       newCoordinate:''
       
     };
-    this.pubnub = new PubNubReact({
-      publishKey: 'pub-c-97a9ef79-a871-474c-987f-46ba162a9d65',
-      subscribeKey: 'sub-c-fa1d39c8-c020-11ea-8089-3ec3506d555b',
-    });
-    this.pubnub.init(this);
+   
   }
 
   componentDidMount() {
+    this.socket = io.connect('http://localhost:5100'); 
+
     axios
       .get("http://localhost:5000/drivers/")
       .then((response) => {
@@ -43,19 +41,18 @@ export default class MapComponent extends Component {
         console.log(error);
       });
 
-      this.pubnub.subscribe({
-        channels: ['location'],
-        withPresence: true,
-      });
-      this.pubnub.getMessage('location', msg => {
-        const { coordinate } = this.state;
-        const { latitude, longitude } = msg.message;
-        const newCoordinate = { lat:latitude, lng:longitude };
-        console.log(newCoordinate);
+      this.socket.on('location', d => { 
+       // console.log(d);
+        const newCoordinate = { lat:d.data.latitude, lng: d.data.longitude };
+        const driver_id = d.data.driver_id;
+        
+        
         this.setState({
-          newCoordinate: newCoordinate
-        })
-      });
+              newCoordinate: newCoordinate
+            })
+    });
+
+   
   }
   sendNotice(driver) {
     console.log("Send PushNotification"+driver.driver_username);
@@ -75,7 +72,7 @@ export default class MapComponent extends Component {
               {" "}
             </Marker>
           ))}
-            <Marker position={this.state.newCoordinate} label="Ali Real Time" ></Marker>
+            <Marker position={this.state.newCoordinate} label="Real Time" ></Marker>
 
         </GoogleMap>
       </LoadScript>
